@@ -114,7 +114,7 @@ typedef struct
     TM_SDLP_OverflowInfo_t  overflowInfo;   /* Overflow Info Structure        */
     TM_SDLP_GlobalConfig_t  *globConfig;    /* Pointer to global config       */
     TM_SDLP_ChannelConfig_t *chnlConfig;    /* Pointer to channel config      */
-    TMTF_PriHdr_t           *frame;         /* Pointer to Transfer frame      */
+    TMTF_PriHdr_t           *framePriHdr;         /* Pointer to Transfer frame      */
 } TM_SDLP_FrameInfo_t;
 
 

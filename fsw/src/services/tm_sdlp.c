@@ -241,7 +241,7 @@ int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo,
     pFrameInfo->currentDataOffset   = pFrameInfo->dataFieldOffset;
     pFrameInfo->globConfig          = pGlobalConfig;
     pFrameInfo->chnlConfig          = pChannelConfig;
-    pFrameInfo->frame               = (TMTF_PriHdr_t *) pTfBuffer; 
+    pFrameInfo->framePriHdr               = (TMTF_PriHdr_t *) pTfBuffer; 
     pFrameInfo->isFirstHdrPtrSet    = false;
     pFrameInfo->isReady             = false;
 
@@ -264,9 +264,9 @@ int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo,
 
     /* Initialize the TF buffer */
     CFE_PSP_MemSet((void *)pTfBuffer, 0, pGlobalConfig->frameLength);
-    TMTF_SetScId(pFrameInfo->frame, pGlobalConfig->scId);
-    TMTF_SetVcId(pFrameInfo->frame, pChannelConfig->vcId);
-    TMTF_SetOcfFlag(pFrameInfo->frame, pChannelConfig->ocfFlag);
+    TMTF_SetScId(pFrameInfo->framePriHdr, pGlobalConfig->scId);
+    TMTF_SetVcId(pFrameInfo->framePriHdr, pChannelConfig->vcId);
+    TMTF_SetOcfFlag(pFrameInfo->framePriHdr, pChannelConfig->ocfFlag);
 
     /* Initialize the Overflow buffer */
     CFE_PSP_MemSet((void *)pOverflowBuffer, 0, pChannelConfig->overflowSize);
@@ -274,8 +274,8 @@ int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo,
     /* Set secondary header flag and sec hdr length */
     if (pChannelConfig->fshFlag == true)
     {
-        TMTF_SetSecHdrFlag(pFrameInfo->frame, 1);
-        TMTF_SetSecHdrLength(pFrameInfo->frame, secHdrLength);
+        TMTF_SetSecHdrFlag(pFrameInfo->framePriHdr, 1);
+        TMTF_SetSecHdrLength(pFrameInfo->framePriHdr, secHdrLength);
     }
 
     /* If we are using the VCP service (CCSDS packets) [TM_SDLP 4.1.2.7] 
@@ -285,20 +285,20 @@ int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo,
      *   */  
     if (pChannelConfig->dataType == 0)
     {
-        TMTF_SetSyncFlag(pFrameInfo->frame, 0);
-        TMTF_SetPacketOrderFlag(pFrameInfo->frame, 0);
-        TMTF_SetSegLengthId(pFrameInfo->frame, 3); 
-        TMTF_SetFirstHdrPtr(pFrameInfo->frame, TMTF_NO_FIRST_HDR_PTR);
+        TMTF_SetSyncFlag(pFrameInfo->framePriHdr, 0);
+        TMTF_SetPacketOrderFlag(pFrameInfo->framePriHdr, 0);
+        TMTF_SetSegLengthId(pFrameInfo->framePriHdr, 3); 
+        TMTF_SetFirstHdrPtr(pFrameInfo->framePriHdr, TMTF_NO_FIRST_HDR_PTR);
     }
     /* If VCA service is used, set sync flag to 1. All other fields are
      * undefined [TM_SDLP 4.1.2.7] */
     else
     {
-        TMTF_SetSyncFlag(pFrameInfo->frame, 1);
+        TMTF_SetSyncFlag(pFrameInfo->framePriHdr, 1);
     }
 
     /* Create the Mutex */
-    gvcid = TMTF_GetGlobalVcId(pFrameInfo->frame);
+    gvcid = TMTF_GetGlobalVcId(pFrameInfo->framePriHdr);
     sprintf(mutName, "TF Global VC ID %d", gvcid);
     OS_MutSemCreate(&pFrameInfo->mutexId, mutName, 0); 
 
@@ -613,7 +613,7 @@ int32 TM_SDLP_SetOidFrame(TM_SDLP_FrameInfo_t *pFrameInfo,
     pIdleData = CFE_SB_GetUserData(pIdlePacket);    
 
     // TODO - Consider if accessing header this way is best, ensure we're doing it consistently
-    TMTF_SetFirstHdrPtr(pFrameInfo->frame, TMTF_OID_FIRST_HDR_PTR);
+    TMTF_SetFirstHdrPtr(pFrameInfo->framePriHdr, TMTF_OID_FIRST_HDR_PTR);
     pFrameInfo->isFirstHdrPtrSet = true;
     iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, pIdleData, pFrameInfo->dataFieldLength, 
                               false);
@@ -669,30 +669,30 @@ int32 TM_SDLP_CompleteFrame(TM_SDLP_FrameInfo_t *pFrameInfo,
 
     /* Increment the master channel frame count */
     *pMcFrameCnt = *pMcFrameCnt + 1;
-    TMTF_SetMcFrameCount(pFrameInfo->frame, *pMcFrameCnt);
+    TMTF_SetMcFrameCount(pFrameInfo->framePriHdr, *pMcFrameCnt);
 
     /* Increment VC frame count if it is a virtual channel */
     //if (pFrameInfo->chnlConfig->isMaster == false)
     //{
-    //    vcFrameCnt = TMTF_IncrVcFrameCount(pFrameInfo->frame);
+    //    vcFrameCnt = TMTF_IncrVcFrameCount(pFrameInfo->framePriHdr);
     //}
 
     /* If an OCF Field is present, set it. */
     if (pFrameInfo->chnlConfig->ocfFlag)
     {
-        TMTF_SetOcf(pFrameInfo->frame, pOcf, pFrameInfo->ocfOffset);
+        TMTF_SetOcf(pFrameInfo->framePriHdr, pOcf, pFrameInfo->ocfOffset);
     }
    
     /* If an ErrCtrl Field is present, set it. */
     if (pFrameInfo->globConfig->hasErrCtrl)
     {
-        TMTF_UpdateErrCtrlField(pFrameInfo->frame, pFrameInfo->errCtrlOffset);
+        TMTF_UpdateErrCtrlField(pFrameInfo->framePriHdr, pFrameInfo->errCtrlOffset);
     }
     
     /* This may happen if the frame is filled by a partial Packet */
     if (pFrameInfo->isFirstHdrPtrSet == false)
     {
-        TMTF_SetFirstHdrPtr(pFrameInfo->frame, TMTF_NO_FIRST_HDR_PTR);
+        TMTF_SetFirstHdrPtr(pFrameInfo->framePriHdr, TMTF_NO_FIRST_HDR_PTR);
     }
 
     /* Reset frame metadata */
@@ -783,7 +783,7 @@ static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, 
     {
         uint16 firstHdrPtr = pFrameInfo->currentDataOffset - 
                              pFrameInfo->dataFieldOffset;
-        TMTF_SetFirstHdrPtr(pFrameInfo->frame, firstHdrPtr);
+        TMTF_SetFirstHdrPtr(pFrameInfo->framePriHdr, firstHdrPtr);
         pFrameInfo->isFirstHdrPtrSet = true;
     }
     pFrameInfo->currentDataOffset += lengthToCopy;
