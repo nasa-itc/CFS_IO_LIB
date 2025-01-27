@@ -19,12 +19,12 @@
 
 #include "tm_sdlp.h"
 
-static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData, 
-                             uint16 dataLength, bool isPacket);
+static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, 
+                             uint8 *pData, uint16 dataLength, bool isPacket);
 static int32 TM_SDLP_CopyToOverflow(TM_SDLP_OverflowInfo_t *pOverflow, 
                                     uint8 *data, uint16 length, 
                                     bool isPartial);
-static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo);
+static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer);
 
 
 
@@ -95,7 +95,7 @@ end_of_function:
 /** \brief TMTF_SDLP_InitChannel
 ******************************************************************************/
 int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo, 
-                          uint8 *pTfBuffer, uint8 *pOverflowBuffer,
+                          uint8_t *pTfBuffer, uint8 *pOverflowBuffer,
                           TM_SDLP_GlobalConfig_t *pGlobalConfig, 
                           TM_SDLP_ChannelConfig_t *pChannelConfig)
 {
@@ -345,10 +345,12 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_AddPacket
 *******************************************************************************/
-int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, CFE_MSG_Message_t *pPacket)
+int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, CFE_MSG_Message_t *pPacket)
 {
     size_t length = 0;
     int32 iStatus = TM_SDLP_SUCCESS;
+
+    printf("Inside TM SDLP AddPacket...\n");
 
     if (pFrameInfo == NULL || pPacket == NULL)
     {
@@ -373,7 +375,7 @@ int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, CFE_MSG_Message_t *pPac
     CFE_MSG_GetSize(pPacket, &length);
 
     OS_MutSemTake(pFrameInfo->mutexId);
-    iStatus = TM_SDLP_AddData(pFrameInfo, (uint8 *) pPacket, length, true);
+    iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, (uint8 *) pPacket, length, true);
     OS_MutSemGive(pFrameInfo->mutexId);
 
 end_of_function:
@@ -384,7 +386,7 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_AddIdlePacket
 *******************************************************************************/
-int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo,
+int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
                             CFE_MSG_Message_t *pIdlePacket)
 {
     int32 iStatus = TM_SDLP_SUCCESS;
@@ -446,7 +448,7 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo,
     
     /* Add the idle packet. May spill over to overflow buffer. */
     /* iStatus should always return 0 free-octet if successful. */
-    iStatus = TM_SDLP_AddData(pFrameInfo, (uint8 *) pIdlePacket, lengthToCopy, 
+    iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, (uint8 *) pIdlePacket, lengthToCopy, 
                               true);
     OS_MutSemGive(pFrameInfo->mutexId);
 
@@ -458,8 +460,8 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_AddVcaData
 *******************************************************************************/
-int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData,
-                         uint16 dataLength)
+int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
+                         uint8 *pData, uint16 dataLength)
 {
     int32 iStatus = TM_SDLP_SUCCESS;
 
@@ -485,7 +487,7 @@ int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData,
     }
     
     OS_MutSemTake(pFrameInfo->mutexId);
-    iStatus = TM_SDLP_AddData(pFrameInfo, pData, dataLength, false);
+    iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, pData, dataLength, false);
     OS_MutSemGive(pFrameInfo->mutexId);
 
 end_of_function:
@@ -496,7 +498,7 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_StartFrame
 *******************************************************************************/
-int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo) 
+int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer) 
 {
     uint16 lengthToCopy = 0;
     uint16 lengthCopied = 0;
@@ -550,7 +552,7 @@ int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo)
         
         while (lengthToCopy > 0)
         {
-            lengthCopied = TM_SDLP_CopyFromOverflow(pFrameInfo);
+            lengthCopied = TM_SDLP_CopyFromOverflow(pFrameInfo, pBuffer);
             lengthToCopy -= lengthCopied;
         }
     }
@@ -565,7 +567,8 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_SetOidFrame
 *******************************************************************************/
-int32 TM_SDLP_SetOidFrame(TM_SDLP_FrameInfo_t *pFrameInfo, 
+int32 TM_SDLP_SetOidFrame(TM_SDLP_FrameInfo_t *pFrameInfo,
+                          uint8_t *pBuffer,
                           CFE_MSG_Message_t *pIdlePacket)
 {
     int32 iStatus = TM_SDLP_SUCCESS;
@@ -609,9 +612,10 @@ int32 TM_SDLP_SetOidFrame(TM_SDLP_FrameInfo_t *pFrameInfo,
 
     pIdleData = CFE_SB_GetUserData(pIdlePacket);    
 
+    // TODO - Consider if accessing header this way is best, ensure we're doing it consistently
     TMTF_SetFirstHdrPtr(pFrameInfo->frame, TMTF_OID_FIRST_HDR_PTR);
     pFrameInfo->isFirstHdrPtrSet = true;
-    iStatus = TM_SDLP_AddData(pFrameInfo, pIdleData, pFrameInfo->dataFieldLength, 
+    iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, pIdleData, pFrameInfo->dataFieldLength, 
                               false);
     
     OS_MutSemGive(pFrameInfo->mutexId);
@@ -735,7 +739,7 @@ end_of_function:
 *       #TM_SDLP_AddPacket
 *       #TM_SDLP_AddIdlePacket
 *******************************************************************************/
-static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData, 
+static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, uint8 *pData, 
                              uint16 dataLength, bool isPacket)
 {
     uint16 lengthToCopy = dataLength;
@@ -771,7 +775,7 @@ static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData,
         }
     }
 
-    CFE_PSP_MemCpy((void *) (pFrameInfo->frame + pFrameInfo->currentDataOffset), 
+    CFE_PSP_MemCpy((void *) (pBuffer + pFrameInfo->currentDataOffset), 
                    pData, lengthToCopy);
     pFrameInfo->freeOctets -= lengthToCopy;
 
@@ -891,7 +895,7 @@ end_of_function:
 *   \see 
 *       #TM_SDLP_StartFrame
 *******************************************************************************/
-static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo)
+static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer)
 {
     uint8 msgHdr[6];
     CFE_MSG_Message_t* MsgPtr = (CFE_MSG_Message_t*) msgHdr;
@@ -962,16 +966,16 @@ static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo)
     /* If the length to the end is greater than the length to copy, copy it. */
     if (lengthToEnd > lengthToCopy)
     {
-        freeOctets = TM_SDLP_AddData(pFrameInfo, pOverflow->dataStart, 
+        freeOctets = TM_SDLP_AddData(pFrameInfo, pBuffer, pOverflow->dataStart, 
                                      lengthToCopy, setHeader);
         pOverflow->dataStart += lengthToCopy;
     }
-    /* Wrap arround overflow buffer if required */
+    /* Wrap around overflow buffer if required */
     else
     {
-        freeOctets = TM_SDLP_AddData(pFrameInfo, pOverflow->dataStart, 
+        freeOctets = TM_SDLP_AddData(pFrameInfo, pBuffer, pOverflow->dataStart, 
                                   lengthToEnd, setHeader);
-        freeOctets = TM_SDLP_AddData(pFrameInfo, pOverflow->buffer, 
+        freeOctets = TM_SDLP_AddData(pFrameInfo, pBuffer, pOverflow->buffer, 
                                   lengthToCopy - lengthToEnd, setHeader);
         pOverflow->dataStart = pOverflow->buffer + 
                                  (lengthToCopy - lengthToEnd);
