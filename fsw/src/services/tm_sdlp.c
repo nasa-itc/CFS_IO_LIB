@@ -193,7 +193,7 @@ int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo,
         dataFieldLength -= TMTF_ERR_CTRL_FIELD_LENGTH;
     }
 
-#ifdef TM_DEBUG
+// #ifdef TM_DEBUG
     printf("TM_SDLP Initializing channel:\n");
     printf("\t Primary header length: \t%d\n", TMTF_PRIHDR_LENGTH);
     printf("\t Secondary header length: \t%d\n", secHdrLength);
@@ -204,10 +204,24 @@ int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo,
     printf("\t Security header length: \t%d\n", sdlsSecurityHeaderLength);
     printf("\t Data field offset: \t%d\n", dataFieldOffset);
     printf("\t Data field length: \t%d\n", dataFieldLength);
-    printf("\t Security trailer length: \t%d\n", sdlsSecurityTrailerLength);
-    printf("\t OCF Length: \t%d HARDCODED - to be changed\n", TMTF_OCF_LENGTH); // Todo, currently hardcoded
-    printf("\t FECF length: \t%d HARDCODED - to be changed\n", TMTF_ERR_CTRL_FIELD_LENGTH); //Todo, currently hardcoded
-#endif
+    printf("\t Security trailer MAC length: \t%d\n", sdlsSecurityTrailerLength);
+    if (pChannelConfig->ocfFlag == true)
+    {
+        printf("\t OCF Length: \t%d\n", TMTF_OCF_LENGTH);
+    }
+    else 
+    {
+        printf("\t OCF Length: \t%d\n", 0);
+    }
+    if (pGlobalConfig->hasErrCtrl == true)
+    {
+        printf("\t FECF length: \t%d \n", TMTF_ERR_CTRL_FIELD_LENGTH);
+    }
+    else
+    {
+        printf("\t FECF length: \t 0");
+    }
+// #endif
 
     if (dataFieldLength < 0)
     {
