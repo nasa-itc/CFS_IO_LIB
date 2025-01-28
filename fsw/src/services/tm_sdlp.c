@@ -374,9 +374,34 @@ int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, CFE_M
     
     CFE_MSG_GetSize(pPacket, &length);
 
+    printf(" \\/ \\/ \\/ \\/ \\/ \n");
+    printf(" Current frame in memory is:\n\t");
+    for (int i=0; i < (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets); i++)
+    {
+        printf("%02X", pBuffer[i]);
+    }
+    printf("\n\n");
+
+    printf("Current size of frame is %d bytes\n",  (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
+
+    printf("Preparing to copy in the %ld byte following frame:\n\t", length);
+    for (int i=0; i < length; i++)
+    {
+        printf("%02X", *((uint8_t *)pPacket + i));
+    }
+    printf("\n\n");
+
     OS_MutSemTake(pFrameInfo->mutexId);
     iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, (uint8 *) pPacket, length, true);
     OS_MutSemGive(pFrameInfo->mutexId);
+
+    printf(" NEW frame in memory is:\n\t");
+    for (int i=0; i < (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets); i++)
+    {
+        printf("%02X", pBuffer[i]);
+    }
+    printf("\n\n");
+    printf(" /\\ /\\ /\\ /\\ \n");
 
 end_of_function:
     return iStatus;
