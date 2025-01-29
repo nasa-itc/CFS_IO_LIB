@@ -65,6 +65,21 @@ int32 TM_SDLP_InitIdlePacket(CFE_MSG_Message_t *pIdlePacket, uint8 *pIdlePattern
 
     /* Idle packet, as specified in CCSDS 133.0-B-1 */
     CFE_MSG_Init(pIdlePacket, CFE_SB_ValueToMsgId(0x3ffU), bufferLength);
+
+    CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+    printf("sdlp INIT Setting msg id\n");
+    CFE_MSG_GetMsgId(pIdlePacket, &MsgId);
+    printf("sdlp INIT MsgID Readback: 0x%04X\n", CFE_SB_MsgIdToValue(MsgId));
+
+    printf("Printing Freshly inited idle packet for the...\n\t");
+        for (int i=0; i<1786; i++)
+        {
+            printf("%02X", *((uint8_t *)pIdlePacket + i));
+        }
+        printf("\n");
+        
+
+
     idleDataLength = CFE_SB_GetUserDataLength(pIdlePacket);
     pIdleData = CFE_SB_GetUserData(pIdlePacket);
 
@@ -85,6 +100,13 @@ int32 TM_SDLP_InitIdlePacket(CFE_MSG_Message_t *pIdlePacket, uint8 *pIdlePattern
                           (pIdlePattern[(byteIdx + 1) % patternLength] >> 
                            (8-bitOffset));
     }
+
+    printf("Printing Freshly FILLED idle packet for the...\n\t");
+        for (int i=0; i<1786; i++)
+        {
+            printf("%02X", *((uint8_t *)pIdlePacket + i));
+        }
+        printf("\n");
 
 end_of_function:
     return iStatus;
@@ -374,41 +396,41 @@ int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, CFE_M
     
     CFE_MSG_GetSize(pPacket, &length);
 
-    printf(" \\/ \\/ \\/ \\/ \\/ \n");
-    printf(" Current frame in memory is:\n\t");
-    for (int i=0; i < (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset); i++)
-    {
-        // printf("%02X", *(uint8 *)(pFrameInfo->frame+i));
-        printf("%02X", *(((uint8 *)pFrameInfo->frame)+i));
-    }
+    // printf(" \\/ \\/ \\/ \\/ \\/ \n");
+    // printf(" Current frame in memory is:\n\t");
     // for (int i=0; i < (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset); i++)
     // {
-    //     printf("%02X", *(uint8 *)(pFrameInfo->frame+i));
+    //     // printf("%02X", *(uint8 *)(pFrameInfo->frame+i));
+    //     printf("%02X", *(((uint8 *)pFrameInfo->frame)+i));
     // }
-    printf("\n\n");
+    // // for (int i=0; i < (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset); i++)
+    // // {
+    // //     printf("%02X", *(uint8 *)(pFrameInfo->frame+i));
+    // // }
+    // printf("\n\n");
 
-    // printf("Current size of frame including header is %d bytes\n",  (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
-    printf("Current size of frame including header is %d bytes\n",  (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset));
+    // // printf("Current size of frame including header is %d bytes\n",  (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
+    // printf("Current size of frame including header is %d bytes\n",  (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset));
 
-    printf("Preparing to copy in the %ld byte following frame:\n\t", length);
-    for (int i=0; i < length; i++)
-    {
-        printf("%02X", *((uint8_t *)pPacket + i));
-    }
-    printf("\n\n");
+    // printf("Preparing to copy in the %ld byte following frame:\n\t", length);
+    // for (int i=0; i < length; i++)
+    // {
+    //     printf("%02X", *((uint8_t *)pPacket + i));
+    // }
+    // printf("\n\n");
 
     OS_MutSemTake(pFrameInfo->mutexId);
     iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, (uint8 *) pPacket, length, true);
     OS_MutSemGive(pFrameInfo->mutexId);
 
-    // printf(" NEW %d byte frame in memory is:\n\t", (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
-    printf(" NEW %d byte frame in memory is:\n\t", (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset));
-    for (int i=0; i < (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset); i++)
-    {
-        // printf("%02X", *((uint8 *)(pFrameInfo->frame)+i));
-        printf("%02X", *(((uint8 *)pFrameInfo->frame)+i));
-    }
-    printf("\n /\\ /\\ /\\ /\\ \n");
+    // // printf(" NEW %d byte frame in memory is:\n\t", (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
+    // printf(" NEW %d byte frame in memory is:\n\t", (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset));
+    // for (int i=0; i < (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset); i++)
+    // {
+    //     // printf("%02X", *((uint8 *)(pFrameInfo->frame)+i));
+    //     printf("%02X", *(((uint8 *)pFrameInfo->frame)+i));
+    // }
+    // printf("\n /\\ /\\ /\\ /\\ \n");
 
 end_of_function:
     return iStatus;
@@ -424,6 +446,8 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
     int32 iStatus = TM_SDLP_SUCCESS;
     uint16 lengthToCopy = 0;
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
+
+    printf("Inside Idle Packet...\n");
 
     if (pFrameInfo == NULL || pIdlePacket == NULL)
     {
@@ -445,13 +469,17 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
         goto end_of_function;
     }
 
+    printf("Getting mutex\n");
     OS_MutSemTake(pFrameInfo->mutexId);
+    printf("Got mutex\n");
     
     lengthToCopy = pFrameInfo->freeOctets;
+    printf("AddIdle length to copy %d\n", lengthToCopy);
 
     /* If no free octets, no idle data to add. Done. */
     if (lengthToCopy == 0)
     {
+        printf("IdlePacket - no free octets!\n");
         OS_MutSemGive(pFrameInfo->mutexId);
         iStatus = TM_SDLP_SUCCESS;
         goto end_of_function;
@@ -459,29 +487,48 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
     /* Minimum length of idle packet is 7. */
     else if (lengthToCopy < 7)
     {
+        printf("tm_sdlp addidle short length\n");
         lengthToCopy = 7;
     }
 
     /* The Message ID of the idle buffer should always be 0x3ff (Idle Packet). */
+    printf("sdlp Getting msg id\n");
     CFE_MSG_GetMsgId(pIdlePacket, &MsgId);
+    printf("sdlp Got msg id\n");
     if (CFE_SB_MsgIdToValue(MsgId) != 0x3ffU)
     {
         CFE_EVS_SendEvent(IO_LIB_TM_SDLP_EID, CFE_EVS_EventType_ERROR,
                           "TM_SDLP_AddIdlePacket Error: "
                           "The IdlePacket has MsgId other than 0x3ff.");
+        printf("IDLE PACKET MSGID SET TO 0x%04X\n", CFE_SB_MsgIdToValue(MsgId));
+
+        printf("Printing idle packet for the luls...\n\t");
+        for (int i=0; i<1786; i++)
+        {
+            printf("%02X", *((uint8_t *)pIdlePacket + i));
+        }
+        printf("\n");
         
         OS_MutSemGive(pFrameInfo->mutexId);
         iStatus = TM_SDLP_ERROR;
         goto end_of_function;
     }
 
+    printf("addidle getting size...\n");
     /* Set the idlePacket length in header to lenghtToCopy */
     CFE_MSG_SetSize(pIdlePacket,  lengthToCopy);
     
     /* Add the idle packet. May spill over to overflow buffer. */
     /* iStatus should always return 0 free-octet if successful. */
+    printf("IdlePacket calling AddData!\n");
     iStatus = TM_SDLP_AddData(pFrameInfo, pBuffer, (uint8 *) pIdlePacket, lengthToCopy, 
                               true);
+    printf("Reprinting idle packet....\n");
+        for (int i=0; i<1786; i++)
+        {
+            printf("%02X", *((uint8_t *)pIdlePacket + i));
+        }
+        printf("\n");
     OS_MutSemGive(pFrameInfo->mutexId);
 
 end_of_function:
@@ -570,6 +617,10 @@ int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer)
     
     /* Set Frame as ready */
     pFrameInfo->isReady = true;
+
+    // Account for the header as part of the frame
+    pFrameInfo->freeOctets = pFrameInfo->freeOctets - pFrameInfo->dataFieldOffset;
+    printf("NEW FRAME total length is %d, free octets available are %d\n", pFrameInfo->freeOctets+pFrameInfo->dataFieldOffset, pFrameInfo->freeOctets);
     
     pOverflow = &pFrameInfo->overflowInfo;
     lengthToCopy = pOverflow->buffSize - pOverflow->freeOctets;
@@ -806,19 +857,66 @@ static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, 
             goto end_of_function;
         }
     }
+
+    printf(" \\/ \\/ \\/ \\/ \\/ \n");
+    printf(" Current frame in memory is:\n\t");
+    for (int i=0; i < pFrameInfo->currentDataOffset; i++)
+    // for (int i=0; i < (pFrameInfo->freeOctets - pFrameInfo->dataFieldOffset); i++)
+    {
+        // printf("%02X", *(uint8 *)(pFrameInfo->frame+i));
+        printf("%02X", *(((uint8 *)pFrameInfo->frame)+i));
+    }
+    // for (int i=0; i < (pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset); i++)
+    // {
+    //     printf("%02X", *(uint8 *)(pFrameInfo->frame+i));
+    // }
+    printf("\n\n");
+
+    // printf("FREE OCTET METHOD: Current size of frame including header is %d bytes\n",  (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
+    // printf("FREE OCTET METHOD: Current size of frame including header is %d bytes\n",  (pFrameInfo->freeOctets - pFrameInfo->dataFieldOffset));
+    printf("Current size of frame including header is %d bytes\n",  pFrameInfo->currentDataOffset);
+
+    printf("Preparing to copy in the %d byte following frame:\n\t", dataLength);
+    for (int i=0; i < dataLength; i++)
+    {
+        printf("%02X", *((uint8_t *)pData + i));
+    }
+    printf("\n\n");
+
     printf("Copying into currentDataOffset of: %d\n", pFrameInfo->currentDataOffset);
-    CFE_PSP_MemCpy((void *) ((uint8 *)pFrameInfo->frame + pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset), 
+    // CFE_PSP_MemCpy((void *) (((uint8 *)pFrameInfo->frame) + pFrameInfo->dataFieldOffset + pFrameInfo->currentDataOffset), 
+                //    pData, lengthToCopy);
+    CFE_PSP_MemCpy((void *) (((uint8 *)pFrameInfo->frame) + pFrameInfo->currentDataOffset), 
                    pData, lengthToCopy);
+
+    printf("Immediately after memcpy, idle frame starts with:\n\t");
+    for (int i=0; i < 20; i++)
+    {
+        printf("%02X", *((uint8_t *)pData + i));
+    }
+    printf("\n\n");
     pFrameInfo->freeOctets -= lengthToCopy;
 
     if ((isPacket == true) && (pFrameInfo->isFirstHdrPtrSet == false))
     {
+        printf("prepping to set first header pointer...\n");
         uint16 firstHdrPtr = pFrameInfo->currentDataOffset - 
                              pFrameInfo->dataFieldOffset;
+        printf("Setting first header pointer to index %d\n", firstHdrPtr);
         TMTF_SetFirstHdrPtr(pFrameInfo->frame, firstHdrPtr);
         pFrameInfo->isFirstHdrPtrSet = true;
     }
     pFrameInfo->currentDataOffset += lengthToCopy;
+
+    // printf(" NEW %d byte frame in memory is:\n\t", (pFrameInfo->dataFieldLength - pFrameInfo->freeOctets));
+    printf(" NEW %d byte frame in memory is:\n\t", pFrameInfo->currentDataOffset);
+    for (int i=0; i < pFrameInfo->currentDataOffset; i++)
+    {
+        // printf("%02X", *((uint8 *)(pFrameInfo->frame)+i));
+        printf("%02X", *(((uint8 *)pFrameInfo->frame)+i));
+    }
+    printf("\n /\\ /\\ /\\ /\\ \n");
+
     iStatus = (int32) pFrameInfo->freeOctets;
 
 end_of_function:
