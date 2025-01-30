@@ -63,8 +63,8 @@ int32 TM_SDLP_InitIdlePacket(CFE_MSG_Message_t *pIdlePacket, uint8 *pIdlePattern
         goto end_of_function;
     }
 
-    /* Idle packet, as specified in CCSDS 133.0-B-1 */
-    CFE_MSG_Init(pIdlePacket, CFE_SB_ValueToMsgId(0x3ffU), bufferLength);
+    /* Idle packet, as specified in CCSDS 133.0-B-2 */
+    CFE_MSG_Init(pIdlePacket, CFE_SB_ValueToMsgId(0x7ffU), bufferLength);
 
     CFE_SB_MsgId_t MsgId = CFE_SB_INVALID_MSG_ID;
     printf("sdlp INIT Setting msg id\n");
@@ -495,7 +495,7 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
     printf("sdlp Getting msg id\n");
     CFE_MSG_GetMsgId(pIdlePacket, &MsgId);
     printf("sdlp Got msg id\n");
-    if (CFE_SB_MsgIdToValue(MsgId) != 0x3ffU)
+    if (CFE_SB_MsgIdToValue(MsgId) != 0x7ffU)
     {
         CFE_EVS_SendEvent(IO_LIB_TM_SDLP_EID, CFE_EVS_EventType_ERROR,
                           "TM_SDLP_AddIdlePacket Error: "
@@ -889,7 +889,7 @@ static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, 
     CFE_PSP_MemCpy((void *) (((uint8 *)pFrameInfo->frame) + pFrameInfo->currentDataOffset), 
                    pData, lengthToCopy);
 
-    printf("Immediately after memcpy, idle frame starts with:\n\t");
+    printf("Immediately after memcpy, idle packet starts with:\n\t");
     for (int i=0; i < 20; i++)
     {
         printf("%02X", *((uint8_t *)pData + i));
