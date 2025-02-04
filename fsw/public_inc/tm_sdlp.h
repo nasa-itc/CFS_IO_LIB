@@ -350,7 +350,7 @@ int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo,
 *
 *   \see 
 *******************************************************************************/
-int32 TM_SDLP_SetOidFrame(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
+int32 TM_SDLP_SetOidFrame(TM_SDLP_FrameInfo_t *pFrameInfo,
                           CFE_MSG_Message_t *pIdlePacket);
 
 
