@@ -187,7 +187,7 @@ int32 TM_SDLP_InitIdlePacket(CFE_MSG_Message_t *pIdlePacket, uint8 *pIdlePattern
 *       #TMTF_SetFirstHdrPtr
 *******************************************************************************/
 int32 TM_SDLP_InitChannel(TM_SDLP_FrameInfo_t *pFrameInfo, 
-                          uint8 *pTfBuffer, uint8 *pOfBuffer,
+                          uint8_t *pTfBuffer, uint8 *pOfBuffer,
                           TM_SDLP_GlobalConfig_t *pGlobalConfig, 
                           TM_SDLP_ChannelConfig_t *pChannelConfig);
 
@@ -235,7 +235,8 @@ int32 TM_SDLP_FrameHasData(TM_SDLP_FrameInfo_t *pFrameInfo);
 *   \see 
 *       #TM_SDLP_AddData
 *******************************************************************************/
-int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo,
+int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, 
+                        uint8_t *pBuffer,
                         CFE_MSG_Message_t *pPacket);
                            
 
@@ -271,6 +272,7 @@ int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo,
 *       #TM_SDLP_GenPseudoRandomSeq
 *******************************************************************************/
 int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo,
+                            uint8_t *pBuffer,
                             CFE_MSG_Message_t *pIdlePacket);
 
 
@@ -297,8 +299,8 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo,
 *   \see
 *       #TM_SDLP_AddData
 *******************************************************************************/
-int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData, 
-                         uint16 dataLength);
+int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
+                         uint8 *pData, uint16 dataLength);
 
 
 /******************************************************************************/
@@ -321,7 +323,8 @@ int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData,
 *   \see 
 *       #TM_SDLP_AddIdlePacket
 *******************************************************************************/
-int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo);
+int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo, 
+                         uint8_t *pBuffer);
 
 
 /******************************************************************************/
