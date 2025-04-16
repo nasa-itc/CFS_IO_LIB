@@ -271,9 +271,7 @@ int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo,
 *       #TM_SDLP_AddData
 *       #TM_SDLP_GenPseudoRandomSeq
 *******************************************************************************/
-int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo,
-                            uint8_t *pBuffer,
-                            CFE_MSG_Message_t *pIdlePacket);
+int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, CFE_MSG_Message_t *pIdlePacket);
 
 
 /******************************************************************************/
