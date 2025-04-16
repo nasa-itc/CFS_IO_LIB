@@ -24,7 +24,7 @@ static int32 TM_SDLP_AddData(TM_SDLP_FrameInfo_t *pFrameInfo,
 static int32 TM_SDLP_CopyToOverflow(TM_SDLP_OverflowInfo_t *pOverflow, 
                                     uint8 *data, uint16 length, 
                                     bool isPartial);
-static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer);
+static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo);
 
 
 
@@ -368,7 +368,7 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_AddPacket
 *******************************************************************************/
-int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer, CFE_MSG_Message_t *pPacket)
+int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, CFE_MSG_Message_t *pPacket)
 {
     size_t length = 0;
     int32 iStatus = TM_SDLP_SUCCESS;
@@ -540,8 +540,7 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_AddVcaData
 *******************************************************************************/
-int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
-                         uint8 *pData, uint16 dataLength)
+int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData, uint16 dataLength)
 {
     int32 iStatus = TM_SDLP_SUCCESS;
 
@@ -579,7 +578,7 @@ end_of_function:
 /******************************************************************************/
 /** \brief TM_SDLP_StartFrame
 *******************************************************************************/
-int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer) 
+int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo) 
 {
     uint16 lengthToCopy = 0;
     uint16 lengthCopied = 0;
@@ -639,7 +638,7 @@ int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer)
         
         while (lengthToCopy > 0)
         {
-            lengthCopied = TM_SDLP_CopyFromOverflow(pFrameInfo, pBuffer);
+            lengthCopied = TM_SDLP_CopyFromOverflow(pFrameInfo);
             lengthToCopy -= lengthCopied;
         }
     }
@@ -1032,7 +1031,7 @@ end_of_function:
 *   \see 
 *       #TM_SDLP_StartFrame
 *******************************************************************************/
-static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer)
+static int32 TM_SDLP_CopyFromOverflow(TM_SDLP_FrameInfo_t *pFrameInfo)
 {
     uint8 msgHdr[6];
     CFE_MSG_Message_t* MsgPtr = (CFE_MSG_Message_t*) msgHdr;

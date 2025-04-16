@@ -235,11 +235,8 @@ int32 TM_SDLP_FrameHasData(TM_SDLP_FrameInfo_t *pFrameInfo);
 *   \see 
 *       #TM_SDLP_AddData
 *******************************************************************************/
-int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, 
-                        uint8_t *pBuffer,
-                        CFE_MSG_Message_t *pPacket);
+int32 TM_SDLP_AddPacket(TM_SDLP_FrameInfo_t *pFrameInfo, CFE_MSG_Message_t *pPacket);
                            
-
 
 /******************************************************************************/
 /** \brief Add an Idle packet to transfer frame
@@ -297,8 +294,7 @@ int32 TM_SDLP_AddIdlePacket(TM_SDLP_FrameInfo_t *pFrameInfo, CFE_MSG_Message_t *
 *   \see
 *       #TM_SDLP_AddData
 *******************************************************************************/
-int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
-                         uint8 *pData, uint16 dataLength);
+int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8 *pData, uint16 dataLength);
 
 
 /******************************************************************************/
@@ -321,8 +317,7 @@ int32 TM_SDLP_AddVcaData(TM_SDLP_FrameInfo_t *pFrameInfo, uint8_t *pBuffer,
 *   \see 
 *       #TM_SDLP_AddIdlePacket
 *******************************************************************************/
-int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo, 
-                         uint8_t *pBuffer);
+int32 TM_SDLP_StartFrame(TM_SDLP_FrameInfo_t *pFrameInfo);
 
 
 /******************************************************************************/
