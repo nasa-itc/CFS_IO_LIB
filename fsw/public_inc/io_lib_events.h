@@ -43,6 +43,7 @@ typedef enum
     IO_LIB_TRANS_SELECT_EID         = 9,
     IO_LIB_COP1_EID                 = 10,
     IO_LIB_TM_SDLP_EID              = 11,
+    IO_LIB_AOS_SDLP_EID             = 12,
     IO_LIB_EVT_CNT 
 } IO_LIB_Events_t;
 
